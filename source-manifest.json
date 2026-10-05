@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "protocol_version": 2,
+  "cli_header": "X-AwakePlay-CLI-Version",
+  "protocol_header": "X-AwakePlay-Protocol-Version",
+  "latest": "0.12.0",
+  "minimum_supported": "0.10.0",
+  "skill_version": "0.13.0",
+  "skill_sha256": "d7a326e7fb9659200190c9f972dde0d2c1d0fe5ee9358122dbc1305d23b21d7d",
+  "update_policy": "pull-and-verify",
+  "url": "https://awakeplay.com/skill",
+  "cli_url": "https://awakeplay.com/downloads/awakeplay.mjs",
+  "cli_sha256": "29ba4a1e1799ff4d05b1462e45b7214368d92897ca0f5e441a38d40af094ef65",
+  "release_notes_url": "https://awakeplay.com/release-notes",
+  "node": ">=22.15",
+  "auth": "oauth-device",
+  "credential_storage": {
+    "windows": "DPAPI CurrentUser",
+    "macos_linux": "memory-only"
+  }
+}
