@@ -5,7 +5,7 @@ description: Publish or update an existing static web game through AwakePlay, ma
 
 # Publish with AwakePlay
 
-Version: 0.13.0
+Version: 0.14.0
 Control API: https://awakeplay.com
 
 ## Game SDK: players, leaderboards, saves and gameplay analytics
@@ -44,7 +44,7 @@ Only publish the verified output directory, never the source tree. It must have 
 
 The project icon and poster are independent project metadata. Uploading `icon.png`, `poster.jpg` or other pictures as game files does not assign them to the platform. A project's images are shared across its versions; changing them does not build, upload or publish a game version, and rolling back a game version does not restore earlier images. The game still controls its own in-game pictures.
 
-Use CLI 0.12.0 or newer and check the fresh manifest first. For a new game, run the normal `preview` flow to create the linked project, then upload selected assets separately:
+Use CLI 0.13.0 or newer and check the fresh manifest first. For a new game, run the normal `preview` flow to create the linked project, then upload selected assets separately:
 
 ```sh
 node awakeplay.mjs media --icon ./branding/icon.png --poster ./branding/poster.webp
@@ -83,7 +83,7 @@ Requires Node.js 22.15 or newer. No npm global installation, Cloudflare login, W
 
 Before every publishing task, fetch `https://awakeplay.com/skill-version.json`. Schema 1 declares `protocol_version`, `latest`, `minimum_supported`, `cli_url`, and `cli_sha256`. The independent `skill_version` and `skill_sha256` identify this guide: reread `url` when either changes, even if the CLI version has not changed. Read `release_notes_url` for release changes. Use only URLs on the exact Control API origin, without redirects or credentials. Download `cli_url` to a tool directory outside the game's publish output, inspect the readable code, and compare the file's SHA-256 with `cli_sha256` from the fresh manifest. Verify the Skill digest too. On a mismatch, fetch a fresh manifest and retry once; never execute a mismatching download. Download and run are separate steps; never use curl piped into a shell. On Windows PowerShell use `curl.exe`, not its legacy curl alias.
 
-The CLI sends `X-AwakePlay-CLI-Version: 0.12.0` and `X-AwakePlay-Protocol-Version: 2` headers on authenticated service requests and device authorization. Login, preview and publish check compatibility before authorization or build. Compatible updates are advisory; an unsupported protocol or version below the minimum stops with `cli_update_required` (exit code 2). The server enforces the same rule with HTTP 426, including during uploads and device polling. Do not bypass it by changing headers/API origins or manually replaying uploads. Update errors do not revoke credentials or remove project links/checkpoints; retry the original command using the new file after review.
+The CLI sends `X-AwakePlay-CLI-Version: 0.13.0` and `X-AwakePlay-Protocol-Version: 2` headers on authenticated service requests and device authorization. Login, preview and publish check compatibility before authorization or build. Compatible updates are advisory; an unsupported protocol or version below the minimum stops with `cli_update_required` (exit code 2). The server enforces the same rule with HTTP 426, including during uploads and device polling. Do not bypass it by changing headers/API origins or manually replaying uploads. Update errors do not revoke credentials or remove project links/checkpoints; retry the original command using the new file after review.
 
 AwakePlay CLI can check and securely download updates without logging in:
 
@@ -108,6 +108,18 @@ Use AwakePlay CLI 0.10.0 or newer with protocol 2. Older CLIs receive 426 and mu
 Default new work and iterations to `preview`. Anyone with its link can play: label it **unpublished, public to link holders, not private**. Upload completion validates immutable files; it never switches the formal URL. Give the author the preview URL, deployment ID and `release_revision`. Ask them to play that version before confirmation. When the user explicitly says to publish or update the live version, that instruction authorizes the release: do not ask for redundant confirmation.
 
 Confirm the exact uploaded version with `publish --deployment <id> --expected-revision <n>`. Use the revision the author reviewed. Do not rebuild, reupload or silently pick a newer version. An explicit request for direct publishing may use `publish --dir <output>` / `publish --auto`, which uploads and releases in one operation. A 409 `release_conflict` means the live state changed: stop, explain the change and obtain a new release decision; never fetch a new revision and automatically overwrite it.
+
+## Optionally list a published work in the game plaza
+
+After a formal release is ready, an Agent may manage that owner’s plaza listing with the downloaded CLI. This is separate from releasing the game: it never changes the formal game URL or the current deployment.
+
+```text
+node /path/to/awakeplay.mjs plaza --project <id> --visibility public --summary "One sentence about the play" --instructions "How to start and play" --credit "Creator name" --category arcade --device all --consent
+```
+
+The command reads the current listing revision before submitting, so it also works for an existing project that was published before the plaza existed. Use `--visibility link` when the stable URL should remain shareable but the work should stay out of the directory and recommendations. Use `--withdraw` to leave the plaza while keeping the normal share URL. `--cover-path <relative-file>` may select a raster image from the current formal release; remote URLs and SVG covers are rejected. The first submission needs `--summary`, `--instructions` and `--credit`; later submissions reuse saved metadata when those values are omitted. `public` requires `--consent` and enters the pending review queue; `link` is not a password or private access mode.
+
+The command requires the normal Agent publishing grant, including `projects:read` and `deployments:publish`. It can read and submit only projects owned by that connection. It cannot open the curator queue, approve, feature or hide a listing; those actions remain a browser session for the configured reviewer. A successful response reports `draft` or `pending`; public discovery starts only after a reviewer approves the current release and metadata. A release, pause or deletion makes an existing listing ineligible until the author submits the current release again.
 
 ## Authorize and upload
 

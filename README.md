@@ -28,9 +28,9 @@ Your assistant needs access to the local project, the ability to run commands, n
 
 ## Release integrity
 
-This is an unchanged distribution copy of the official Skill **0.13.0**. The file is 33,813 bytes and its SHA-256 is:
+This is the current distribution copy of the official Skill **0.14.0**. The file is 35,628 bytes and its SHA-256 is:
 
-`d7a326e7fb9659200190c9f972dde0d2c1d0fe5ee9358122dbc1305d23b21d7d`
+`802c49ac1b56485cbb6fedfbf014d6328fb47bd0ae91a21f78ae08bd55ac7a58`
 
 Official sources: [Skill](https://awakeplay.com/skill), [version and hashes](https://awakeplay.com/skill-version.json), [release notes](https://awakeplay.com/release-notes), [optional game SDK](https://awakeplay.com/sdk). The recorded manifest is in [source-manifest.json](source-manifest.json). Follow the Skill's fresh-version checks before using the CLI.
 
