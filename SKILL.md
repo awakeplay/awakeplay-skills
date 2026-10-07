@@ -5,7 +5,7 @@ description: Publish or update an existing static web game through AwakePlay, ma
 
 # Publish with AwakePlay
 
-Version: 0.14.0
+Version: 0.14.1
 Control API: https://awakeplay.com
 
 ## Game SDK: players, leaderboards, saves and gameplay analytics
@@ -109,15 +109,15 @@ Default new work and iterations to `preview`. Anyone with its link can play: lab
 
 Confirm the exact uploaded version with `publish --deployment <id> --expected-revision <n>`. Use the revision the author reviewed. Do not rebuild, reupload or silently pick a newer version. An explicit request for direct publishing may use `publish --dir <output>` / `publish --auto`, which uploads and releases in one operation. A 409 `release_conflict` means the live state changed: stop, explain the change and obtain a new release decision; never fetch a new revision and automatically overwrite it.
 
-## Optionally list a published work in the game plaza
+## Prepare the game-plaza preview after a formal release
 
-After a formal release is ready, an Agent may manage that owner’s plaza listing with the downloaded CLI. This is separate from releasing the game: it never changes the formal game URL or the current deployment.
+After a formal release is ready, the Agent should generate concise plaza metadata from the finished work and create a link-only listing preview in the same task. This is separate from releasing the game: it never changes the formal game URL or the current deployment. The creator then opens **游玩中心**, reviews the player-facing preview, changes the project name or poster from **作品设置** if needed, and submits the prepared listing for review. Do not send the creator back through a second metadata form.
 
 ```text
-node /path/to/awakeplay.mjs plaza --project <id> --visibility public --summary "One sentence about the play" --instructions "How to start and play" --credit "Creator name" --category arcade --device all --consent
+node /path/to/awakeplay.mjs plaza --project <id> --visibility link --summary "One sentence about the play" --instructions "How to start and play" --credit "Creator name" --category arcade --device all
 ```
 
-The command reads the current listing revision before submitting, so it also works for an existing project that was published before the plaza existed. Use `--visibility link` when the stable URL should remain shareable but the work should stay out of the directory and recommendations. Use `--withdraw` to leave the plaza while keeping the normal share URL. `--cover-path <relative-file>` may select a raster image from the current formal release; remote URLs and SVG covers are rejected. The first submission needs `--summary`, `--instructions` and `--credit`; later submissions reuse saved metadata when those values are omitted. `public` requires `--consent` and enters the pending review queue; `link` is not a password or private access mode.
+The command reads the current listing revision before submitting, so it also works for an existing project that was published before the plaza existed. Generate the summary, instructions, credit, category and device from the finished work, then use `--visibility link` for the initial author preview. The link-only draft is visible only to someone with the stable link; it is not private and is excluded from the public directory. Use `--withdraw` to leave the plaza while keeping the normal share URL. `--cover-path <relative-file>` may select a raster image from the current formal release; remote URLs and SVG covers are rejected. The first submission needs `--summary`, `--instructions` and `--credit`; later submissions reuse saved metadata when those values are omitted. The creator's browser confirmation changes the prepared listing to `public` and sends it to manual review; Agents must not silently submit public consent on the creator's behalf.
 
 The command requires the normal Agent publishing grant, including `projects:read` and `deployments:publish`. It can read and submit only projects owned by that connection. It cannot open the curator queue, approve, feature or hide a listing; those actions remain a browser session for the configured reviewer. A successful response reports `draft` or `pending`; public discovery starts only after a reviewer approves the current release and metadata. A release, pause or deletion makes an existing listing ineligible until the author submits the current release again.
 
