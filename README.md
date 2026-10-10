@@ -28,11 +28,11 @@ Your assistant needs access to the local project, the ability to run commands, n
 
 ## Release integrity
 
-This mirror is prepared for the CLI 0.14.0 / Skill 0.15.0 rollout. Check the live website manifest for production availability; a GitHub mirror update does not deploy the platform. Never bypass a version or hash mismatch.
+This mirror is prepared for the CLI 0.14.1 / Skill 0.15.1 rollout. Check the live website manifest for production availability; a GitHub mirror update does not deploy the platform. Never bypass a version or hash mismatch.
 
-This is the current distribution copy of the official Skill **0.15.0**. The file is 38,929 bytes and its SHA-256 is:
+This is the current distribution copy of the official Skill **0.15.1**. The file is 39,531 bytes and its SHA-256 is:
 
-`d37fe2bf0a7c9fde8086f44eca6a67079cdcbdc714067452dc8b36b32278ac9b`
+`aa7fbc1fa1ad0c0b4ea955483e0ba3f39c0a108ee1fff912b2f584e4984b8f3b`
 
 Official sources: [Skill](https://awakeplay.com/skill), [version and hashes](https://awakeplay.com/skill-version.json), [release notes](https://awakeplay.com/release-notes), [optional game SDK](https://awakeplay.com/sdk). The recorded manifest is in [source-manifest.json](source-manifest.json). Follow the Skill's fresh-version checks before using the CLI.
 

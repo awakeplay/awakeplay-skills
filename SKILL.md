@@ -5,7 +5,7 @@ description: Publish or update an existing static web game through AwakePlay, ma
 
 # Publish with AwakePlay
 
-Version: 0.15.0
+Version: 0.15.1
 Control API: https://awakeplay.com
 
 ## Game SDK: players, leaderboards, saves and gameplay analytics
@@ -44,7 +44,7 @@ Only publish the verified output directory, never the source tree. It must have 
 
 The project icon and poster are independent project metadata. Uploading `icon.png`, `poster.jpg` or other pictures as game files does not assign them to the platform. A project's images are shared across its versions; changing them does not build, upload or publish a game version, and rolling back a game version does not restore earlier images. The game still controls its own in-game pictures.
 
-Use CLI 0.14.0 or newer and check the fresh manifest first. For a new game, run the normal `preview` flow to create the linked project, then upload selected assets separately:
+Use CLI 0.14.1 or newer and check the fresh manifest first. For a new game, run the normal `preview` flow to create the linked project, then upload selected assets separately:
 
 ```sh
 node awakeplay.mjs media --icon ./branding/icon.png --poster ./branding/poster.webp
@@ -83,7 +83,7 @@ Requires Node.js 22.15 or newer. No npm global installation, Cloudflare login, W
 
 Before every publishing task, fetch `https://awakeplay.com/skill-version.json`. Schema 1 declares `protocol_version`, `latest`, `minimum_supported`, `cli_url`, and `cli_sha256`. The independent `skill_version` and `skill_sha256` identify this guide: reread `url` when either changes, even if the CLI version has not changed. Read `release_notes_url` for release changes. Use only URLs on the exact Control API origin, without redirects or credentials. Download `cli_url` to a tool directory outside the game's publish output, inspect the readable code, and compare the file's SHA-256 with `cli_sha256` from the fresh manifest. Verify the Skill digest too. On a mismatch, fetch a fresh manifest and retry once; never execute a mismatching download. Download and run are separate steps; never use curl piped into a shell. On Windows PowerShell use `curl.exe`, not its legacy curl alias.
 
-The CLI sends `X-AwakePlay-CLI-Version: 0.14.0` and `X-AwakePlay-Protocol-Version: 2` headers on authenticated service requests and device authorization. Login, preview and publish check compatibility before authorization or build. Compatible updates are advisory; an unsupported protocol or version below the minimum stops with `cli_update_required` (exit code 2). The server enforces the same rule with HTTP 426, including during uploads and device polling. Do not bypass it by changing headers/API origins or manually replaying uploads. Update errors do not revoke credentials or remove project links/checkpoints; retry the original command using the new file after review.
+The CLI sends `X-AwakePlay-CLI-Version: 0.14.1` and `X-AwakePlay-Protocol-Version: 2` headers on authenticated service requests and device authorization. Login, preview and publish check compatibility before authorization or build. Compatible updates are advisory; an unsupported protocol or version below the minimum stops with `cli_update_required` (exit code 2). The server enforces the same rule with HTTP 426, including during uploads and device polling. Do not bypass it by changing headers/API origins or manually replaying uploads. Update errors do not revoke credentials or remove project links/checkpoints; retry the original command using the new file after review.
 
 AwakePlay CLI can check and securely download updates without logging in:
 
@@ -111,23 +111,23 @@ Confirm the exact uploaded version with `publish --deployment <id> --expected-re
 
 ## Share releases and play-center review
 
-Use `plaza --status --project <id>` for an authorized read. Report `model_version`, the share version, active play-center version, pending review and automatic-submission preference separately. A missing public card or failed read does not establish that the project has never joined. Never use a write command for inspection.
+Use `plaza --status --project <id>` for an authorized read. Report `model_version`, the share version, active play-center version, pending review, read-only `author` identity and automatic-submission preference separately. A missing public card or failed read does not establish that the project has never joined. Never use a write command for inspection.
 
 Uploads and previews create immutable candidate versions. Publishing updates the share link. In model 2, an enabled `auto_submit_on_publish` preference also queues that exact formal release for review using the saved, authorized presentation template. The previously approved play-center version remains available until approval; a rejected update does not remove it. Share rollback never queues a review or changes the play-center pointer. Preserve the preference and presentation metadata during ordinary updates. `changed: false` is a no-op unless the creator explicitly requests a separate submission.
 
 Joining is optional. The creator may use **作品详情 → 游玩中心**, or explicitly ask the Agent to submit. An explicit request to publish to the play center authorizes the Agent to submit the selected version with `--consent`; do not require an additional browser publishing click. Without that request or an already enabled automatic policy, return the management URL and available next action. OAuth connection approval still belongs to the human. There is no `is_first` upload parameter; the server reads persistent channel state.
 
-Prepare presentation metadata only when requested. Draft saves do not publish. For model 2:
+Prepare presentation metadata only when requested. Draft saves do not publish. The author name and avatar come from the owning account public profile; they are not editable per game. Direct the creator to account settings for a nickname or avatar change. Do not invent a separate credit or send an author identity in metadata commands. For model 2:
 
 ```bash
 node /path/to/awakeplay.mjs plaza --project <id> --status
-node /path/to/awakeplay.mjs plaza --project <id> --save-draft --title "Game title" --summary "One sentence about the play" --credit "Creator name" --category arcade --device all
+node /path/to/awakeplay.mjs plaza --project <id> --save-draft --title "Game title" --summary "One sentence about the play" --category arcade --device all
 node /path/to/awakeplay.mjs plaza --project <id> --deployment <deployment-id> --consent --auto-submit on
 ```
 
 The last command requires the creator's submission authorization and approval of that automatic-update preference. Omit `--auto-submit` to preserve the existing preference; use `off` when requested. A ready unpublished version may be submitted independently of the share link. Draft saves capture the current project images; submission fixes the deployment, metadata, images and data contract. If images or revisions changed, refresh and review the change rather than blindly overwriting a conflict.
 
-Use `plaza --auto-submit on|off` for an authorized preference change, `--withdraw-submission <id>` to withdraw one pending request while retaining the active version, and `--leave` only for an explicit request to leave the center. A review rejection pauses automatic submission until the author fixes the issue and explicitly submits again. Preserve checkpoint request IDs and original revisions on retries. After a conflict, reread and explain what changed; `--fresh` represents a new explicit operation, not an automatic retry.
+Use `plaza --auto-submit on|off` for an authorized preference change, `--withdraw-submission <id>` to withdraw one pending request while retaining the active version, and `--leave` only for an explicit request to leave the center. A review rejection pauses automatic submission until the author fixes the issue and explicitly submits again. Preserve checkpoint request IDs and original revisions on retries. For a saved CLI 0.14.0 command, remove the retired `--credit` option when rerunning the otherwise identical command with the current CLI. The CLI matches that legacy checkpoint and replays its exact saved request body, including the old field and identifiers; do not edit the checkpoint. New draft requests never contain a separate credit. After a conflict, reread and explain what changed; `--fresh` represents a new explicit operation, not an automatic retry.
 
 The platform uses one fixed-version play-center model. Its status response has `model_version: 2`; a project that has not joined has a null channel and policy revision 0. Historical entries are converted once by the platform operator, not by the author or Agent. If the platform reports an older model or an incomplete schema upgrade, stop and report that state; do not attempt a legacy write or another upload as a workaround. Writes fail closed when rollout is paused. Old clients receive `426` if they cannot express required submission or automatic-submission policy preconditions.
 
