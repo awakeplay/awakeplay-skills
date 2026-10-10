@@ -5,7 +5,7 @@ description: Publish or update an existing static web game through AwakePlay, ma
 
 # Publish with AwakePlay
 
-Version: 0.14.1
+Version: 0.15.0
 Control API: https://awakeplay.com
 
 ## Game SDK: players, leaderboards, saves and gameplay analytics
@@ -16,7 +16,7 @@ The public [SDK manifest](https://awakeplay.com/sdk-version.json) gives `version
 
 SDK 2 exposes `window.AwakePlay.ready()`, `submitScore(score, { requestId })` and `leaderboard()`. It runs inside the platform share/preview page, not a standalone local HTML or direct runtime URL. The guide includes the minimal example, response fields, optional preview avatars, error handling and retry rules. Never load the SDK from the control domain as a remote runtime dependency or bypass the CLI's relative-asset checks. The game renders its own leaderboard UI; platform hosting and login do not automatically connect existing game scores. Preview leaderboards are empty and score writes are rejected; verify formal scoring through `share_url` after release. Do not generate test scores on a creator's live game without authorization.
 
-SDK 2.1 adds `loadSave()`, `save(data, { schemaVersion, expectedRevision, requestId? })` and `resolveSave(conflictId, choice, options)` when cloud saves are enabled. Read the guide for the exact contract. The game chooses checkpoints and restores its own JSON state; existing localStorage is not automatically uploaded. One 64 KiB save is shared across releases for each game/player. Keep `schemaVersion` independent of release numbers: migrate only formats the game understands and refuse to overwrite unknown formats. Rolling back game code does not restore earlier save data, and there are no per-release save snapshots.
+SDK 2.1 adds `loadSave()`, `save(data, { schemaVersion, expectedRevision, requestId? })` and `resolveSave(conflictId, choice, options)` when cloud saves are enabled. Read the guide for the exact contract. The game chooses checkpoints and restores its own JSON state; existing localStorage is not automatically uploaded. Legacy share releases use one 64 KiB save per game/player. Declared releases use one per game/player/save namespace, shared only among compatible releases. Keep `schemaVersion` independent of release numbers: migrate only formats the game understands and refuse to overwrite unknown formats. Rolling back game code does not restore earlier save data, and there are no per-release save snapshots.
 
 Load before saving, use the returned revision, and retain the same data/revision/request ID for a network retry. A conflict requires rereading and an explicit player choice; never fetch a new revision and overwrite blindly. Guest/account progress may both survive a claim as conflict candidates; the game presents the choice, never guesses which progress is better. Preview cannot read or write formal saves. Verify with an authorized test project, preserve unsaved progress on failure, and do not treat `unavailable`, `preview_read_only` or a failed read as an empty save. Agent publishing authorization cannot read player saves and must not be embedded in game code.
 
@@ -44,7 +44,7 @@ Only publish the verified output directory, never the source tree. It must have 
 
 The project icon and poster are independent project metadata. Uploading `icon.png`, `poster.jpg` or other pictures as game files does not assign them to the platform. A project's images are shared across its versions; changing them does not build, upload or publish a game version, and rolling back a game version does not restore earlier images. The game still controls its own in-game pictures.
 
-Use CLI 0.13.0 or newer and check the fresh manifest first. For a new game, run the normal `preview` flow to create the linked project, then upload selected assets separately:
+Use CLI 0.14.0 or newer and check the fresh manifest first. For a new game, run the normal `preview` flow to create the linked project, then upload selected assets separately:
 
 ```sh
 node awakeplay.mjs media --icon ./branding/icon.png --poster ./branding/poster.webp
@@ -67,7 +67,7 @@ Before uploading, report the verified publish directory, file count and total by
 
 Explain that AwakePlay does not require the complete development project or Git history. Project inspection may read local configuration, and builds run locally; using a prebuilt `--dir` without `--auto` or `--build` skips CLI automatic project detection/build, but still reads publishing configuration and the output files. Distinguish those local reads from upload contents. Creator-facing source and ownership FAQs are available at `https://awakeplay.com/publish#faq`.
 
-Uploading does not transfer the creator's rights in the work. AwakePlay uses the work only for hosting, previews, sharing and necessary service operations; without the creator's separate consent it does not use the work for model training, sale or independent reuse. Published runtime files are delivered to players' browsers, and preview links are accessible to anyone holding the link. When asked about retention or deletion, or when helping pause a project or close a preview, explain that pausing or closing access does not delete files. When version cleanup is enabled, the author can delete completed non-current versions in the project's version list; this closes their previews and permanently removes the ability to restore them. Individual versions have no trash recovery. Shared files stay while other versions reference them, and quota is released after physical cleanup succeeds. Current and uploading versions are protected.
+Uploading does not transfer the creator's rights in the work. AwakePlay uses the work only for hosting, previews, sharing and necessary service operations; without the creator's separate consent it does not use the work for model training, sale or independent reuse. Published runtime files are delivered to players' browsers, and preview links are accessible to anyone holding the link. When asked about retention or deletion, or when helping pause a project or close a preview, explain that pausing or closing access does not delete files. When version cleanup is enabled, the author can delete completed non-current versions in the project's version list; this closes their previews and permanently removes the ability to restore them. Individual versions have no trash recovery. Shared files stay while other versions reference them, and quota is released after physical cleanup succeeds. Current and uploading versions are protected. Active play-center versions, pending reviews and retained snapshots can also prevent version deletion; presentation templates retain their image references.
 
 Whole projects can be moved to the seven-day trash from their browser detail page when project lifecycle actions are enabled. Moving a project closes its formal and preview links and frees one of the account's 10 project slots, but its files still count toward the shared 1 GiB. At `https://awakeplay.com/trash`, the author can restore before the displayed deadline or explicitly confirm permanent deletion. Restoration requires an available project slot and returns the project paused, retaining its ID, formal link and completed history; old previews stay closed and incomplete uploads are not restored. The author decides when to reopen access. At the deadline restoration stops, even if physical cleanup has not run. Permanent deletion or expiry retires file references; only successful cleanup of unreferenced objects frees storage, so it may be delayed or release zero bytes. Existing Agent tokens cannot delete versions, manage trash, restore projects or permanently delete them; direct the author to the browser. Never delete history or move projects to trash automatically to make an upload fit. Do not introduce retention/deletion details into an ordinary explanation of upload scope or promise confidential hosting.
 
@@ -83,7 +83,7 @@ Requires Node.js 22.15 or newer. No npm global installation, Cloudflare login, W
 
 Before every publishing task, fetch `https://awakeplay.com/skill-version.json`. Schema 1 declares `protocol_version`, `latest`, `minimum_supported`, `cli_url`, and `cli_sha256`. The independent `skill_version` and `skill_sha256` identify this guide: reread `url` when either changes, even if the CLI version has not changed. Read `release_notes_url` for release changes. Use only URLs on the exact Control API origin, without redirects or credentials. Download `cli_url` to a tool directory outside the game's publish output, inspect the readable code, and compare the file's SHA-256 with `cli_sha256` from the fresh manifest. Verify the Skill digest too. On a mismatch, fetch a fresh manifest and retry once; never execute a mismatching download. Download and run are separate steps; never use curl piped into a shell. On Windows PowerShell use `curl.exe`, not its legacy curl alias.
 
-The CLI sends `X-AwakePlay-CLI-Version: 0.13.0` and `X-AwakePlay-Protocol-Version: 2` headers on authenticated service requests and device authorization. Login, preview and publish check compatibility before authorization or build. Compatible updates are advisory; an unsupported protocol or version below the minimum stops with `cli_update_required` (exit code 2). The server enforces the same rule with HTTP 426, including during uploads and device polling. Do not bypass it by changing headers/API origins or manually replaying uploads. Update errors do not revoke credentials or remove project links/checkpoints; retry the original command using the new file after review.
+The CLI sends `X-AwakePlay-CLI-Version: 0.14.0` and `X-AwakePlay-Protocol-Version: 2` headers on authenticated service requests and device authorization. Login, preview and publish check compatibility before authorization or build. Compatible updates are advisory; an unsupported protocol or version below the minimum stops with `cli_update_required` (exit code 2). The server enforces the same rule with HTTP 426, including during uploads and device polling. Do not bypass it by changing headers/API origins or manually replaying uploads. Update errors do not revoke credentials or remove project links/checkpoints; retry the original command using the new file after review.
 
 AwakePlay CLI can check and securely download updates without logging in:
 
@@ -109,17 +109,39 @@ Default new work and iterations to `preview`. Anyone with its link can play: lab
 
 Confirm the exact uploaded version with `publish --deployment <id> --expected-revision <n>`. Use the revision the author reviewed. Do not rebuild, reupload or silently pick a newer version. An explicit request for direct publishing may use `publish --dir <output>` / `publish --auto`, which uploads and releases in one operation. A 409 `release_conflict` means the live state changed: stop, explain the change and obtain a new release decision; never fetch a new revision and automatically overwrite it.
 
-## Prepare the game-plaza preview after a formal release
+## Share releases and play-center review
 
-After a formal release is ready, the Agent should generate concise plaza metadata from the finished work and create a link-only listing preview in the same task. This is separate from releasing the game: it never changes the formal game URL or the current deployment. The creator then opens **游玩中心**, reviews the player-facing preview, changes the project name or poster from **作品设置** if needed, and submits the prepared listing for review. Do not send the creator back through a second metadata form.
+Use `plaza --status --project <id>` for an authorized read. Report `model_version`, the share version, active play-center version, pending review and automatic-submission preference separately. A missing public card or failed read does not establish that the project has never joined. Never use a write command for inspection.
 
-```text
-node /path/to/awakeplay.mjs plaza --project <id> --visibility link --summary "One sentence about the play" --instructions "How to start and play" --credit "Creator name" --category arcade --device all
+Uploads and previews create immutable candidate versions. Publishing updates the share link. In model 2, an enabled `auto_submit_on_publish` preference also queues that exact formal release for review using the saved, authorized presentation template. The previously approved play-center version remains available until approval; a rejected update does not remove it. Share rollback never queues a review or changes the play-center pointer. Preserve the preference and presentation metadata during ordinary updates. `changed: false` is a no-op unless the creator explicitly requests a separate submission.
+
+Joining is optional. The creator may use **作品详情 → 游玩中心**, or explicitly ask the Agent to submit. An explicit request to publish to the play center authorizes the Agent to submit the selected version with `--consent`; do not require an additional browser publishing click. Without that request or an already enabled automatic policy, return the management URL and available next action. OAuth connection approval still belongs to the human. There is no `is_first` upload parameter; the server reads persistent channel state.
+
+Prepare presentation metadata only when requested. Draft saves do not publish. For model 2:
+
+```bash
+node /path/to/awakeplay.mjs plaza --project <id> --status
+node /path/to/awakeplay.mjs plaza --project <id> --save-draft --title "Game title" --summary "One sentence about the play" --credit "Creator name" --category arcade --device all
+node /path/to/awakeplay.mjs plaza --project <id> --deployment <deployment-id> --consent --auto-submit on
 ```
 
-The command reads the current listing revision before submitting, so it also works for an existing project that was published before the plaza existed. Generate the summary, instructions, credit, category and device from the finished work, then use `--visibility link` for the initial author preview. The link-only draft is visible only to someone with the stable link; it is not private and is excluded from the public directory. Use `--withdraw` to leave the plaza while keeping the normal share URL. `--cover-path <relative-file>` may select a raster image from the current formal release; remote URLs and SVG covers are rejected. The first submission needs `--summary`, `--instructions` and `--credit`; later submissions reuse saved metadata when those values are omitted. The creator's browser confirmation changes the prepared listing to `public` and sends it to manual review; Agents must not silently submit public consent on the creator's behalf.
+The last command requires the creator's submission authorization and approval of that automatic-update preference. Omit `--auto-submit` to preserve the existing preference; use `off` when requested. A ready unpublished version may be submitted independently of the share link. Draft saves capture the current project images; submission fixes the deployment, metadata, images and data contract. If images or revisions changed, refresh and review the change rather than blindly overwriting a conflict.
 
-The command requires the normal Agent publishing grant, including `projects:read` and `deployments:publish`. It can read and submit only projects owned by that connection. It cannot open the curator queue, approve, feature or hide a listing; those actions remain a browser session for the configured reviewer. A successful response reports `draft` or `pending`; public discovery starts only after a reviewer approves the current release and metadata. A release, pause or deletion makes an existing listing ineligible until the author submits the current release again.
+Use `plaza --auto-submit on|off` for an authorized preference change, `--withdraw-submission <id>` to withdraw one pending request while retaining the active version, and `--leave` only for an explicit request to leave the center. A review rejection pauses automatic submission until the author fixes the issue and explicitly submits again. Preserve checkpoint request IDs and original revisions on retries. After a conflict, reread and explain what changed; `--fresh` represents a new explicit operation, not an automatic retry.
+
+The platform uses one fixed-version play-center model. Its status response has `model_version: 2`; a project that has not joined has a null channel and policy revision 0. Historical entries are converted once by the platform operator, not by the author or Agent. If the platform reports an older model or an incomplete schema upgrade, stop and report that state; do not attempt a legacy write or another upload as a workaround. Writes fail closed when rollout is paused. Old clients receive `426` if they cannot express required submission or automatic-submission policy preconditions.
+
+## Versioned player-data contracts
+
+For a game using platform saves or leaderboards in the play center, supply `--release-data <json-file>` when uploading its candidate. The declaration is immutable with the deployment. Declare only formats the actual game can read and write:
+
+```json
+{"save":{"namespace":"main","read_min":1,"read_max":2,"write_schema":2},"leaderboard":{"ruleset":"standard","season":"evergreen"}}
+```
+
+Set either capability to `null` when unused. A missing declaration is legacy mode, not evidence of compatibility. Saves use the declared namespace and schema bounds; leaderboards use the ruleset and season. Do not invent compatibility, change a namespace to hide a conflict, or treat an incompatible/unavailable save as empty progress. Rolling back code never rolls back player data. Existing legacy cloud saves require an explicit migration decision before moving to a declared namespace.
+
+Sharing and discovery run on separate origins, so arbitrary localStorage progress does not transfer automatically. Do not promise continuity for a game that only stored data locally. Preserve its old access path and provide an explicit game-specific export/import or migration before switching player entry. Review runtimes never access or mutate formal player data.
 
 ## Authorize and upload
 

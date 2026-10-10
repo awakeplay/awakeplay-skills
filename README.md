@@ -17,7 +17,7 @@ Ask your assistant to share a local web game, prepare a playable preview, or upd
 Install the official distribution repository with the Skills CLI:
 
 ```sh
-npx skills add AirDia/awakeplay-skills --skill publish-awakeplay
+npx skills add awakeplay/awakeplay-skills --skill publish-awakeplay
 ```
 
 Alternatively, install directly from https://awakeplay.com/skill, or copy SKILL.md into a publish-awakeplay folder in the skills directory supported by your coding assistant. Read the Skill and use your assistant's supported installation flow. Installing a Skill does not authorize a publish operation.
@@ -28,9 +28,11 @@ Your assistant needs access to the local project, the ability to run commands, n
 
 ## Release integrity
 
-This is the current distribution copy of the official Skill **0.14.0**. The file is 35,628 bytes and its SHA-256 is:
+This mirror is prepared for the CLI 0.14.0 / Skill 0.15.0 rollout. Check the live website manifest for production availability; a GitHub mirror update does not deploy the platform. Never bypass a version or hash mismatch.
 
-`802c49ac1b56485cbb6fedfbf014d6328fb47bd0ae91a21f78ae08bd55ac7a58`
+This is the current distribution copy of the official Skill **0.15.0**. The file is 38,929 bytes and its SHA-256 is:
+
+`d37fe2bf0a7c9fde8086f44eca6a67079cdcbdc714067452dc8b36b32278ac9b`
 
 Official sources: [Skill](https://awakeplay.com/skill), [version and hashes](https://awakeplay.com/skill-version.json), [release notes](https://awakeplay.com/release-notes), [optional game SDK](https://awakeplay.com/sdk). The recorded manifest is in [source-manifest.json](source-manifest.json). Follow the Skill's fresh-version checks before using the CLI.
 
