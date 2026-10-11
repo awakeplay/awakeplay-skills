@@ -5,7 +5,7 @@ description: Publish or update an existing static web game through AwakePlay, ma
 
 # Publish with AwakePlay
 
-Version: 0.15.1
+Version: 0.15.2
 Control API: https://awakeplay.com
 
 ## Game SDK: players, leaderboards, saves and gameplay analytics
@@ -44,7 +44,7 @@ Only publish the verified output directory, never the source tree. It must have 
 
 The project icon and poster are independent project metadata. Uploading `icon.png`, `poster.jpg` or other pictures as game files does not assign them to the platform. A project's images are shared across its versions; changing them does not build, upload or publish a game version, and rolling back a game version does not restore earlier images. The game still controls its own in-game pictures.
 
-Use CLI 0.14.1 or newer and check the fresh manifest first. For a new game, run the normal `preview` flow to create the linked project, then upload selected assets separately:
+Use CLI 0.14.2 or newer and check the fresh manifest first. For a new game, run the normal `preview` flow to create the linked project, then upload selected assets separately:
 
 ```sh
 node awakeplay.mjs media --icon ./branding/icon.png --poster ./branding/poster.webp
@@ -83,7 +83,7 @@ Requires Node.js 22.15 or newer. No npm global installation, Cloudflare login, W
 
 Before every publishing task, fetch `https://awakeplay.com/skill-version.json`. Schema 1 declares `protocol_version`, `latest`, `minimum_supported`, `cli_url`, and `cli_sha256`. The independent `skill_version` and `skill_sha256` identify this guide: reread `url` when either changes, even if the CLI version has not changed. Read `release_notes_url` for release changes. Use only URLs on the exact Control API origin, without redirects or credentials. Download `cli_url` to a tool directory outside the game's publish output, inspect the readable code, and compare the file's SHA-256 with `cli_sha256` from the fresh manifest. Verify the Skill digest too. On a mismatch, fetch a fresh manifest and retry once; never execute a mismatching download. Download and run are separate steps; never use curl piped into a shell. On Windows PowerShell use `curl.exe`, not its legacy curl alias.
 
-The CLI sends `X-AwakePlay-CLI-Version: 0.14.1` and `X-AwakePlay-Protocol-Version: 2` headers on authenticated service requests and device authorization. Login, preview and publish check compatibility before authorization or build. Compatible updates are advisory; an unsupported protocol or version below the minimum stops with `cli_update_required` (exit code 2). The server enforces the same rule with HTTP 426, including during uploads and device polling. Do not bypass it by changing headers/API origins or manually replaying uploads. Update errors do not revoke credentials or remove project links/checkpoints; retry the original command using the new file after review.
+The CLI sends `X-AwakePlay-CLI-Version: 0.14.2` and `X-AwakePlay-Protocol-Version: 2` headers on authenticated service requests and device authorization. Login, preview and publish check compatibility before authorization or build. Compatible updates are advisory; an unsupported protocol or version below the minimum stops with `cli_update_required` (exit code 2). The server enforces the same rule with HTTP 426, including during uploads and device polling. Do not bypass it by changing headers/API origins or manually replaying uploads. Update errors do not revoke credentials or remove project links/checkpoints; retry the original command using the new file after review.
 
 AwakePlay CLI can check and securely download updates without logging in:
 
@@ -155,7 +155,7 @@ node /path/to/awakeplay.mjs preview --dir <verified-output> --build "npm run bui
 
 For prebuilt static HTML omit `--build`. A failed build stops before upload. For an already linked project the CLI may authorize first to capture the live revision before a long build; static output checks without a build run before authorization. `--api <origin>` selects another environment explicitly. Never pass cloud credentials or a bearer token on the command line.
 
-The CLI displays a short user code and a browser URL, then waits. Give the URL and user code to the human. The human signs in with email OTP in the browser, checks the account, device and matching code, and explicitly allows the connection. Do not read their email, ask them to paste an OTP or token into chat, or approve consent on their behalf. A browser login by itself does not approve an Agent. Requests expire after 10 minutes; rejected or expired requests require a new attempt.
+The CLI displays a short user code and a browser URL, then waits. Give the URL and user code to the human. The human signs in with email OTP or, when available, a Chinese mainland phone SMS OTP in the browser, checks the account, device and matching code, and explicitly allows the connection. Either verified login identity can use the same account's projects and existing authorizations. Adding a missing login identity in account settings is voluntary; do not require binding before publishing. Do not read their email or SMS, ask them to paste an OTP or token into chat, or approve consent on their behalf. A browser login by itself does not approve an Agent. Requests expire after 10 minutes; rejected or expired requests require a new attempt.
 
 The Agent receives a separate, scoped token valid for up to 7 days, with no refresh token. It can identify the account, read/create that user's projects, read/create deployments and preview links, and explicitly publish/restore versions with `deployments:publish`. Existing connections are not silently expanded; reauthorize to obtain the new scope. It cannot approve other devices or manage other connections. Windows stores credentials encrypted with DPAPI for the current OS user under their home directory. macOS/Linux currently use memory-only authorization: `publish` obtains approval and uploads in the same process. Use `--memory-only` on any OS to opt out of persistence. Do not capture or print private device codes, access tokens, cookies or upload credentials.
 
