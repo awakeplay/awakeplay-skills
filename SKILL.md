@@ -1,11 +1,11 @@
 ---
 name: publish-awakeplay
-description: Publish or update an existing static web game through AwakePlay, manage its icon and poster, integrate its game SDK when requested, and verify author analytics using browser-approved Agent authorization.
+description: Publish or update a static web game through AwakePlay, manage its images, integrate the game SDK, read author analytics, or submit user-approved platform feedback through browser-approved Agent authorization.
 ---
 
 # Publish with AwakePlay
 
-Version: 0.15.2
+Version: 0.16.0
 Control API: https://awakeplay.com
 
 ## Game SDK: players, leaderboards, saves and gameplay analytics
@@ -44,7 +44,7 @@ Only publish the verified output directory, never the source tree. It must have 
 
 The project icon and poster are independent project metadata. Uploading `icon.png`, `poster.jpg` or other pictures as game files does not assign them to the platform. A project's images are shared across its versions; changing them does not build, upload or publish a game version, and rolling back a game version does not restore earlier images. The game still controls its own in-game pictures.
 
-Use CLI 0.14.2 or newer and check the fresh manifest first. For a new game, run the normal `preview` flow to create the linked project, then upload selected assets separately:
+Use CLI 0.15.0 or newer and check the fresh manifest first. For a new game, run the normal `preview` flow to create the linked project, then upload selected assets separately:
 
 ```sh
 node awakeplay.mjs media --icon ./branding/icon.png --poster ./branding/poster.webp
@@ -83,7 +83,7 @@ Requires Node.js 22.15 or newer. No npm global installation, Cloudflare login, W
 
 Before every publishing task, fetch `https://awakeplay.com/skill-version.json`. Schema 1 declares `protocol_version`, `latest`, `minimum_supported`, `cli_url`, and `cli_sha256`. The independent `skill_version` and `skill_sha256` identify this guide: reread `url` when either changes, even if the CLI version has not changed. Read `release_notes_url` for release changes. Use only URLs on the exact Control API origin, without redirects or credentials. Download `cli_url` to a tool directory outside the game's publish output, inspect the readable code, and compare the file's SHA-256 with `cli_sha256` from the fresh manifest. Verify the Skill digest too. On a mismatch, fetch a fresh manifest and retry once; never execute a mismatching download. Download and run are separate steps; never use curl piped into a shell. On Windows PowerShell use `curl.exe`, not its legacy curl alias.
 
-The CLI sends `X-AwakePlay-CLI-Version: 0.14.2` and `X-AwakePlay-Protocol-Version: 2` headers on authenticated service requests and device authorization. Login, preview and publish check compatibility before authorization or build. Compatible updates are advisory; an unsupported protocol or version below the minimum stops with `cli_update_required` (exit code 2). The server enforces the same rule with HTTP 426, including during uploads and device polling. Do not bypass it by changing headers/API origins or manually replaying uploads. Update errors do not revoke credentials or remove project links/checkpoints; retry the original command using the new file after review.
+The CLI sends `X-AwakePlay-CLI-Version: 0.15.0` and `X-AwakePlay-Protocol-Version: 2` headers on authenticated service requests and device authorization. Login, preview and publish check compatibility before authorization or build. Compatible updates are advisory; an unsupported protocol or version below the minimum stops with `cli_update_required` (exit code 2). The server enforces the same rule with HTTP 426, including during uploads and device polling. Do not bypass it by changing headers/API origins or manually replaying uploads. Update errors do not revoke credentials or remove project links/checkpoints; retry the original command using the new file after review.
 
 AwakePlay CLI can check and securely download updates without logging in:
 
@@ -105,7 +105,9 @@ Use AwakePlay CLI 0.10.0 or newer with protocol 2. Older CLIs receive 426 and mu
 
 ## Preview, then confirm the selected version
 
-Default new work and iterations to `preview`. Anyone with its link can play: label it **unpublished, public to link holders, not private**. Upload completion validates immutable files; it never switches the formal URL. Give the author the preview URL, deployment ID and `release_revision`. Ask them to play that version before confirmation. When the user explicitly says to publish or update the live version, that instruction authorizes the release: do not ask for redundant confirmation.
+Default new work and iterations to `preview`. Each new deployment has its own fixed preview link; retrying the same deployment reuses it. Anyone holding an enabled link can play. Explain this in natural language when delivering the preview: this version is uploaded for testing; a new project has no formal share release yet, while an update leaves the previous live version in place. Give the preview URL, deployment ID, `release_revision` and `https://awakeplay.com/projects/<project-id>` management link. The author can test and publish this exact version from the backend, or ask the Agent to publish it. When the user explicitly says to publish or update the live version, that instruction authorizes the release: do not ask for redundant confirmation.
+
+Include the relevant test limitations in that handoff: preview may collect isolated test visits, redacted runtime errors and connected gameplay metrics; it is not a promise of no recorded user data. It does not submit formal leaderboard scores (the preview board is empty) or read/write formal cloud saves. The game's own localStorage or other behavior is not guaranteed to be absent, and preview data does not automatically become formal player data. Explain restrictions that affect this game's test, without reciting unrelated implementation details.
 
 Confirm the exact uploaded version with `publish --deployment <id> --expected-revision <n>`. Use the revision the author reviewed. Do not rebuild, reupload or silently pick a newer version. An explicit request for direct publishing may use `publish --dir <output>` / `publish --auto`, which uploads and releases in one operation. A 409 `release_conflict` means the live state changed: stop, explain the change and obtain a new release decision; never fetch a new revision and automatically overwrite it.
 
@@ -125,7 +127,7 @@ node /path/to/awakeplay.mjs plaza --project <id> --save-draft --title "Game titl
 node /path/to/awakeplay.mjs plaza --project <id> --deployment <deployment-id> --consent --auto-submit on
 ```
 
-The last command requires the creator's submission authorization and approval of that automatic-update preference. Omit `--auto-submit` to preserve the existing preference; use `off` when requested. A ready unpublished version may be submitted independently of the share link. Draft saves capture the current project images; submission fixes the deployment, metadata, images and data contract. If images or revisions changed, refresh and review the change rather than blindly overwriting a conflict.
+The last command requires the creator's submission authorization and approval of that automatic-update preference. Omit `--auto-submit` to preserve the existing preference; use `off` when requested. A ready unpublished version may be submitted independently of the share link. Submission selects a fixed version for review and possible public play-center/featured display; entry requires approval. Submission does not publish the share link, and share publishing does not replace review. Draft saves capture the current project images; submission fixes the deployment, metadata, images and data contract. If images or revisions changed, refresh and review the change rather than blindly overwriting a conflict.
 
 Use `plaza --auto-submit on|off` for an authorized preference change, `--withdraw-submission <id>` to withdraw one pending request while retaining the active version, and `--leave` only for an explicit request to leave the center. A review rejection pauses automatic submission until the author fixes the issue and explicitly submits again. Preserve checkpoint request IDs and original revisions on retries. For a saved CLI 0.14.0 command, remove the retired `--credit` option when rerunning the otherwise identical command with the current CLI. The CLI matches that legacy checkpoint and replays its exact saved request body, including the old field and identifiers; do not edit the checkpoint. New draft requests never contain a separate credit. After a conflict, reread and explain what changed; `--fresh` represents a new explicit operation, not an automatic retry.
 
@@ -188,6 +190,24 @@ When present, read `gameplay.status`, `summary`, `versions` and `definitions` to
 Combine this evidence with the creator's own playtest feedback and local source. Published paths may point to compiled/minified assets; do not guess a source location. Distinguish an observed error from a hypothesis and ask for reproduction when needed. If `context.has_current_release` is false, report that there is no current release; do not fall back to historical totals. If the live version changed since the feedback snapshot, read fresh feedback before attributing an issue to the new release.
 
 For an authorized fix, make a focused local change and run relevant checks, then use the existing `preview` flow. Let the creator compare the candidate with the reported version and confirm the intended release within the task's existing authorization. Publish that exact candidate with its deployment ID and expected revision. A revision conflict requires reviewing the new live state; never silently replace it. Use the platform's version restore flow for rollback. HTTP reachability does not prove gameplay, and preview leaderboards do not write formal scores. Report local checks, actual playtests and unverified devices separately. Feedback analysis alone never authorizes modifying or publishing a game.
+
+## Report platform issues or suggestions
+
+`report` submits platform feedback; the existing `feedback` command continues to read game analytics. When you encounter a platform bug, misleading guide, usage obstacle or useful improvement, you may draft a short description of what happened and its effect. Show the text and any specifically selected screenshots together for the creator's approval before sending. An explicit request to send that text and those images is already authorization; do not ask again. Label unverified explanations as hypotheses. Do not interrupt every successful task to solicit feedback; a failed submission must not block the original task.
+
+After approval, prefer a reviewed UTF-8 text file outside the game's output for multiline content:
+
+```sh
+node awakeplay.mjs report --message-file ./platform-feedback.txt --category bug --memory-only --no-browser
+```
+
+The message is required; `--message <text>` is available for a short message. Category is optional (`bug`, `suggestion`, `other`); optional context is an explicitly chosen owned `--project`, `--skill-version` and `--error-code`. The CLI adds its own version. Send only approved content: never automatically attach tokens, cookies, OTPs, signed URLs, source code, full conversations or raw logs. Summarize reproduction and error codes instead. No project link or successful upload is needed, and `report` does not require a working release manifest; the server still enforces CLI compatibility.
+
+Optionally append `--image ./chosen-screenshot.png`, repeating it for up to three static PNG/JPEG/WebP images, each at most 5 MiB, 4096 pixels per edge and 16 MP. Only upload files the creator explicitly selected and approved for this report. Check visible text and image contents for credentials, private conversations and personal information as part of that same review. Do not automatically capture a screen, scan a directory or add other files. Screenshot links in the receipt are private: the owner or feedback maintainer views them through a browser Session; the Agent token cannot read them.
+
+Feedback requires only `feedback:write`, separate from analytics and publishing. Normal publishing scopes and existing grants do not gain it. Without a saved connection, `report` requests a process-only feedback connection. If a saved connection lacks the scope, use the same command with `--memory-only` for separate browser approval; this preserves the publishing credential. Stop after a denial or expired flow and explain the next action, rather than repeatedly starting new authorization.
+
+Successful stdout is a JSON receipt with feedback ID, status, request ID and selected-image metadata; authorization and progress use stderr. Keep the receipt and report the actual result. `.playable/report.json` retains reviewed content and screenshot paths/hashes/order without credentials or image copies; keep the original files unchanged. For a network/408/429/5xx, conflicting-ID or invalid-receipt result, repeat the same command and preserve its ID, body and ordered image bytes. Missing or changed images stop; restore them instead of dropping attachments. After success, a different approved message starts a new report; same-message image changes require a new explicit `--request-id <UUID-v4>` for an intended new report. Explicit image IDs also retain local bindings in `.playable/report-<UUID>.json`; text-only explicit IDs need no checkpoint. After an upgrade, preserve the original `--cli-version` from the retry hint. Pending screenshot attempts normally expire after 24 hours; account invalidation can end one earlier. Only an explicit `410 feedback_request_expired` proves it cannot resume: review the content before rerunning with a new ID. Run same-directory reports sequentially; keep checkpoints while recovery is needed and remove them when finished if their reviewed text or local paths should no longer remain.
 
 ## Manage and verify
 
