@@ -5,7 +5,7 @@ description: Publish or update a static web game through AwakePlay, manage its i
 
 # Publish with AwakePlay
 
-Version: 0.17.1
+Version: 0.17.2
 Control API: https://awakeplay.com
 
 ## Game SDK: recommended integration for platform game capabilities
@@ -60,7 +60,7 @@ Standalone GIF previews, multi-image screenshot galleries and video demo slots a
 
 The project icon and poster are independent project metadata. Uploading `icon.png`, `poster.jpg` or other pictures as game files does not assign them to the platform. A project's images are shared across its versions; changing them does not build, upload or publish a game version, and rolling back a game version does not restore earlier images. The game still controls its own in-game pictures.
 
-Use CLI 0.16.0 or newer and check the fresh manifest first. For a new game, run the normal `preview` flow to create the linked project, then upload selected assets separately:
+Use CLI 0.16.1 or newer and check the fresh manifest first. For a new game, run the normal `preview` flow to create the linked project, then upload selected assets separately:
 
 ```sh
 node awakeplay.mjs media --icon ./branding/icon.png --poster ./branding/poster.webp
@@ -99,7 +99,7 @@ Requires Node.js 22.15 or newer. No npm global installation, Cloudflare login, W
 
 Before every publishing task, fetch `https://awakeplay.com/skill-version.json`. Schema 1 declares `protocol_version`, `latest`, `minimum_supported`, `cli_url`, and `cli_sha256`. The independent `skill_version` and `skill_sha256` identify this guide: reread `url` when either changes, even if the CLI version has not changed. Read `release_notes_url` for release changes. Use only URLs on the exact Control API origin, without redirects or credentials. Download `cli_url` to a tool directory outside the game's publish output, inspect the readable code, and compare the file's SHA-256 with `cli_sha256` from the fresh manifest. Verify the Skill digest too. On a mismatch, fetch a fresh manifest and retry once; never execute a mismatching download. Download and run are separate steps; never use curl piped into a shell. On Windows PowerShell use `curl.exe`, not its legacy curl alias.
 
-The CLI sends `X-AwakePlay-CLI-Version: 0.16.0` and `X-AwakePlay-Protocol-Version: 2` headers on authenticated service requests and device authorization. Login, preview and publish check compatibility before authorization or build. Compatible updates are advisory; an unsupported protocol or version below the minimum stops with `cli_update_required` (exit code 2). The server enforces the same rule with HTTP 426, including during uploads and device polling. Do not bypass it by changing headers/API origins or manually replaying uploads. Update errors do not revoke credentials or remove project links/checkpoints; retry the original command using the new file after review.
+The CLI sends `X-AwakePlay-CLI-Version: 0.16.1` and `X-AwakePlay-Protocol-Version: 2` headers on authenticated service requests and device authorization. Login, preview and publish check compatibility before authorization or build. Compatible updates are advisory; an unsupported protocol or version below the minimum stops with `cli_update_required` (exit code 2). The server enforces the same rule with HTTP 426, including during uploads and device polling. Do not bypass it by changing headers/API origins or manually replaying uploads. Update errors do not revoke credentials or remove project links/checkpoints; retry the original command using the new file after review.
 
 AwakePlay CLI can check and securely download updates without logging in:
 
@@ -127,7 +127,7 @@ For an explicit ID, use `--share-id <id>` with 3–40 lowercase ASCII letters or
 
 When the creator wants to check an ID without uploading, use the separate read-only `check-share-id --share-id <id>`. It needs an Agent connection with `projects:create`; if no sufficient grant exists, its browser approval requests only that scope. It prints JSON `{ "share_slug": "<id>", "available": true|false }`; `available: false` is a successful query with exit 0, while query failures exit nonzero. Report the current status without implying a reservation. There is no need to run this standalone command immediately before a normal first upload, which already checks.
 
-An existing `playable.project.json` or a checkpoint for an already created project continues its original URL and needs no new choice or availability check. A checkpoint saved before project creation replays its original share-ID choice and request ID directly, without checking availability: `available: false` could reflect that very creation succeeding before its response was lost. `--fresh` only changes the Deployment and cannot change this project request or share ID. After a definite `share_slug_taken`, the creator can choose another explicit ID or explicitly delegate automatic allocation; the CLI checks a new explicit candidate during the retry. Never delete a project's association or create another project to change its link. Renaming a project's display name, updating a release or rolling it back also preserves the share URL. This Skill's choice rule applies to CLI 0.16.0; older compatible clients may omit `share_slug` and retain server-side automatic creation. On a rollback to an older server that rejects the new query or explicit field, stop and explain the version mismatch; never silently skip the check or field and create a different link.
+An existing `playable.project.json` or a checkpoint for an already created project continues its original URL and needs no new choice or availability check. A checkpoint saved before project creation replays its original share-ID choice and request ID directly, without checking availability: `available: false` could reflect that very creation succeeding before its response was lost. `--fresh` only changes the Deployment and cannot change this project request or share ID. After a definite `share_slug_taken`, the creator can choose another explicit ID or explicitly delegate automatic allocation; the CLI checks a new explicit candidate during the retry. Never delete a project's association or create another project to change its link. Renaming a project's display name, updating a release or rolling it back also preserves the share URL. This Skill's choice rule applies to CLI 0.16.1; older compatible clients may omit `share_slug` and retain server-side automatic creation. On a rollback to an older server that rejects the new query or explicit field, stop and explain the version mismatch; never silently skip the check or field and create a different link.
 
 ## Preview, then confirm the selected version
 
